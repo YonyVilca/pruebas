@@ -6,7 +6,7 @@ PASSWORD="admin"
 HOSTNAME="archlinux"
 LOCALE="en_US.UTF-8"
 TIMEZONE="America/Lima"
-DESKTOP_ENV="kde"  # Cambia a "gnome" si prefieres 2
+DESKTOP_ENV="kde"  # Cambia a "gnome" si prefieres 3
 
 # Confirmación antes de formatear el disco
 echo "¡¡¡ATENCIÓN!!! Se borrará TODO en $DISK. ¿Seguro? (yes/no)"
@@ -51,7 +51,7 @@ mount "${DISK}p5" /mnt/var
 
 # Instalación del sistema base
 echo "Instalando el sistema base..."
-pacstrap /mnt base linux linux-firmware vim sudo networkmanager grub efibootmgr
+pacstrap /mnt base linux linux-firmware vim sudo networkmanager systemd-boot
 
 # Generar fstab
 genfstab -U /mnt >> /mnt/etc/fstab
@@ -76,16 +76,14 @@ echo "$HOSTNAME" > /etc/hostname
 # Configuración de red
 systemctl enable NetworkManager
 
-# Instalación de GRUB
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
-if [[ $? -ne 0 ]]; then
-    echo "Error: La instalación de GRUB falló. Verifica el montaje de /boot."
-    exit 1
-fi
-grub-mkconfig -o /boot/grub/grub.cfg
+# Instalación de systemd-boot
+bootctl --path=/boot install
 
-# Asegurar la entrada de arranque con efibootmgr
-efibootmgr -c -d $DISK -p 1 -L "Arch Linux" -l "\\EFI\\GRUB\\grubx64.efi"
+# Configuración del cargador de arranque
+echo "title   Arch Linux" > /boot/loader/entries/arch.conf
+echo "linux   /vmlinuz-linux" >> /boot/loader/entries/arch.conf
+echo "initrd  /initramfs-linux.img" >> /boot/loader/entries/arch.conf
+echo "options root=PARTUUID=$(blkid -s PARTUUID -o value ${DISK}p2) rw" >> /boot/loader/entries/arch.conf
 
 # Creación del usuario y permisos
 useradd -m -G wheel -s /bin/bash $USERNAME
