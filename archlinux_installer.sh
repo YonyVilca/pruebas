@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Variables (Modifica según necesidad)
 DISK="/dev/nvme0n1"  # Cambia esto según tu disco principal
 USERNAME="global"
@@ -34,7 +33,6 @@ parted -s "$DISK" mkpart primary ext4 130.5GiB 170.5GiB
 parted -s "$DISK" mkpart primary linux-swap 170.5GiB 180.5GiB
 parted -s "$DISK" mkpart primary ext4 180.5GiB 100%
 
-# Formateo de las particiones
 mkfs.fat -F32 "${DISK}p1"
 mkfs.ext4 "${DISK}p2"
 mkfs.ext4 "${DISK}p3"
@@ -79,16 +77,16 @@ echo "$HOSTNAME" > /etc/hostname
 systemctl enable NetworkManager
 
 # Instalación de systemd-boot
-bootctl --path=/boot install
+bootctl install
 
 # Configuración del cargador de arranque
 echo "title   Arch Linux" > /boot/loader/entries/arch.conf
 echo "linux   /vmlinuz-linux" >> /boot/loader/entries/arch.conf
 echo "initrd  /initramfs-linux.img" >> /boot/loader/entries/arch.conf
-echo "options root=PARTUUID=$(blkid -s PARTUUID -o value ${DISK}p2) rw" >> /boot/loader/entries/arch.conf
+echo "options root=$(blkid -s PARTUUID -o value ${DISK}p2) rw" >> /boot/loader/entries/arch.conf
 
 # Asegurar que el sistema detecte systemd-boot
-efibootmgr -c -d $DISK -p 1 -L "Arch Linux" -l "\\EFI\\BOOT\\BOOTX64.EFI"
+efibootmgr -c -d $DISK -p 1 -L "Arch Linux" -l "\\EFI\\SYSTEMD\\SYSTEMD-BOOTX64.EFI"
 
 # Creación del usuario y permisos
 useradd -m -G wheel -s /bin/bash $USERNAME
