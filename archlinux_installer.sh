@@ -6,13 +6,20 @@ PASSWORD="admin"
 HOSTNAME="archlinux"
 LOCALE="en_US.UTF-8"
 TIMEZONE="America/Lima"
-DESKTOP_ENV="kde"  # Cambia a "gnome" si prefieres ACTUAL
+DESKTOP_ENV="kde"  # Cambia a "gnome" si prefieres 2
 
 # Confirmación antes de formatear el disco
 echo "¡¡¡ATENCIÓN!!! Se borrará TODO en $DISK. ¿Seguro? (yes/no)"
 read confirm
 if [[ "$confirm" != "yes" ]]; then
     echo "Instalación cancelada."
+    exit 1
+fi
+
+# Verificar si el sistema está en modo UEFI
+echo "Verificando si el sistema está en modo UEFI..."
+if [[ ! -d /sys/firmware/efi ]]; then
+    echo "Error: El sistema no está en modo UEFI. Asegúrate de habilitar UEFI en la BIOS."
     exit 1
 fi
 
@@ -71,7 +78,14 @@ systemctl enable NetworkManager
 
 # Instalación de GRUB
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+if [[ $? -ne 0 ]]; then
+    echo "Error: La instalación de GRUB falló. Verifica el montaje de /boot."
+    exit 1
+fi
 grub-mkconfig -o /boot/grub/grub.cfg
+
+# Asegurar la entrada de arranque con efibootmgr
+efibootmgr -c -d $DISK -p 1 -L "Arch Linux" -l "\\EFI\\GRUB\\grubx64.efi"
 
 # Creación del usuario y permisos
 useradd -m -G wheel -s /bin/bash $USERNAME
