@@ -6,7 +6,7 @@ PASSWORD="admin"
 HOSTNAME="archlinux"
 LOCALE="en_US.UTF-8"
 TIMEZONE="America/Lima"
-DESKTOP_ENV="kde"  # Cambia a "gnome" si prefieres GNOME
+DESKTOP_ENV="kde"  # Cambia a "gnome" si prefieres ACTUAL
 
 # Confirmación antes de formatear el disco
 echo "¡¡¡ATENCIÓN!!! Se borrará TODO en $DISK. ¿Seguro? (yes/no)"
